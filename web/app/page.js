@@ -11,6 +11,8 @@ import DayStrip from '../components/DayStrip';
 import Sparkline from '../components/Sparkline';
 import HourChart from '../components/HourChart';
 import OutageList from '../components/OutageList';
+import SpeedPanel from '../components/SpeedPanel';
+import Insights from '../components/Insights';
 
 export default function Home() {
   const [days, setDays] = useState(30);
@@ -21,15 +23,19 @@ export default function Home() {
     let alive = true;
     async function load() {
       try {
-        const [summary, outages, hourly, daily, recent] = await Promise.all([
-          getJSON(`/api/summary?days=${days}`),
-          getJSON(`/api/outages?days=${days}`),
-          getJSON(`/api/hourly?days=${days}`),
-          getJSON(`/api/daily?days=${days}`),
-          getJSON('/api/recent'),
-        ]);
+        const [summary, outages, hourly, daily, recent, speed, speedSeries, insights] =
+          await Promise.all([
+            getJSON(`/api/summary?days=${days}`),
+            getJSON(`/api/outages?days=${days}`),
+            getJSON(`/api/hourly?days=${days}`),
+            getJSON(`/api/daily?days=${days}`),
+            getJSON('/api/recent'),
+            getJSON(`/api/speed-summary?days=${days}`),
+            getJSON(`/api/speed-series?days=${days}`),
+            getJSON(`/api/insights?days=${days}`),
+          ]);
         if (alive) {
-          setData({ summary, outages, hourly, daily, recent });
+          setData({ summary, outages, hourly, daily, recent, speed, speedSeries, insights });
           setError(false);
         }
       } catch {
@@ -130,9 +136,17 @@ export default function Home() {
               <DayStrip key={days} days={dayList} />
             </div>
 
+            <div className="mt-4">
+              <SpeedPanel key={days} summary={data.speed} series={data.speedSeries} />
+            </div>
+
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               <Sparkline data={data.recent} />
               <HourChart key={days} data={data.hourly} />
+            </div>
+
+            <div className="mt-4">
+              <Insights data={data.insights} />
             </div>
 
             <div className="mt-4">
