@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --watch --env-file=.env index.js",
     "seed": "node seed.js",
-    "tg": "node --env-file=.env test-telegram.js"
+    "tg": "node --env-file=.env test-telegram.js",
+    "seedspeed": "node seed-speed.js"
   },
   "keywords": [],
   "author": "",

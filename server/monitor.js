@@ -1,5 +1,7 @@
 import db from './db.js';
 import { INTERVAL_SEC, TARGETS } from './config.js';
+import { currentDownStreak, lastCheck } from './queries.js';
+import { sendTelegram } from './notify.js';
 
 const insert = db.prepare(
   'INSERT INTO checks (checked_at, is_up, latency_ms) VALUES (?, ?, ?)'
@@ -23,7 +25,23 @@ async function runCheck() {
       break;
     } catch {}
   }
-  insert.run(new Date().toISOString(), latency === null ? 0 : 1, latency);
+
+  const isUp = latency !== null;
+  const prev = lastCheck();
+  let streak = null;
+
+  if (isUp && prev && prev.is_up === 0) {
+    streak = currentDownStreak();
+  }
+
+  insert.run(new Date().toISOString(), isUp ? 1 : 0, latency);
+
+  if (streak && streak.fails >= 2) {
+    const minutes = Math.max(1, Math.round((streak.fails * INTERVAL_SEC) / 60));
+    await sendTelegram(
+      `ইন্টারনেট ফিরে এসেছে। প্রায় ${minutes.toLocaleString('bn-BD')} মিনিট বন্ধ ছিল।`
+    );
+  }
 }
 
 export function startMonitor() {
